@@ -72,6 +72,31 @@ class User(MethodView):
         return UserModel.query.all()
 
 
+    @jwt_required()
+    @blp.arguments(UserSchema)
+    @blp.response(200, UserSchema)
+    def put(self, user_data):
+        cust_id = get_jwt_identity()
+        user = UserModel.query.get_or_404(cust_id)
+        
+        user.id = cust_id
+        user.username = user_data["username"]
+        user.password = pbkdf2_sha256.hash(user_data["password"])
+        user.email = user_data["email"]
+        user.address = user_data["address"]
+        user.state = user_data["state"]
+        user.country = user_data["country"]
+        user.dob = user_data["dob"]
+        user.contact_no = user_data["contact_no"]
+        user.account_type = user_data["account_type"]
+        user.pan = user_data["pan"]
+        
+        db.session.add(user)
+        db.session.commit()
+
+        return user
+
+
 @blp.route("/user/<int:user_id>")
 class User(MethodView):
     @blp.response(200, UserSchema)
